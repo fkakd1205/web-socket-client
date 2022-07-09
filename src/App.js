@@ -1,18 +1,53 @@
-import logo from './logo.svg';
 import './App.css';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
 import ChatMain from './component/chat/ChatMain';
 import LoginMain from './component/login/LoginMain';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUserInfo } from './redux/action/user';
+import { useEffect } from 'react';
+import { userApiConnect } from './api/userApiConnect';
 
 function App() {
+  const userRdx = useSelector(state => state.userReducer);
+  const location = useLocation();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    async function userLoginCheck() {
+      await userApiConnect().loginCheck()
+        .then(res => {
+          if (res.status == 200) {
+            dispatch(setUserInfo(res.data.data));
+          }
+        })
+        .catch(err => {
+          let res = err.response;
+          if (res?.status === 500) {
+            alert('undefined error.');
+            return;
+          }
+          alert(res?.data?.memo);
+        })
+    }
+
+    userLoginCheck();
+  }, [location])
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/chat" exact element={<ChatMain />} />
-        <Route path="/" exact element={<LoginMain />} />
-      </Routes>
-    </BrowserRouter>
-  );
+    <>
+      {userRdx.userInfo ? (
+        <Routes>
+          <Route path="*" element={<ChatMain />} />
+          <Route path="/" exact element={<ChatMain />} />
+        </Routes>
+      ) : (
+        <Routes>
+          <Route path="*" exact element={<LoginMain />} />
+          <Route path="/" exact element={<LoginMain />} />
+        </Routes>
+      )}
+    </>
+  )
 }
 
 export default App;

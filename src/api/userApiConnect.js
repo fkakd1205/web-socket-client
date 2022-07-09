@@ -13,6 +13,11 @@ const userApiConnect = () => {
             return await axios.post(`${API_SERVER_ADDRESS}/api/v1/user/login`, data, {
                 withCredentials: true
             });
+        },
+        loginCheck: async function() {
+            return await axios.get(`${API_SERVER_ADDRESS}/api/v1/user/login-check`, {
+                withCredentials: true
+            })
         }
         
     }

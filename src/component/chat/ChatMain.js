@@ -3,11 +3,11 @@ import * as StompJs from "@stomp/stompjs";
 import * as SockJS from "sockjs-client";
 import { chatApiConnect } from "../../api/chatApiConnect";
 import { userApiConnect } from "../../api/userApiConnect";
-
-const USER_ID = process.env.REACT_APP_USER_ID;
+import { useSelector } from "react-redux";
 
 const ChatMain = () => {
     const [userList, dispatchUserList] = useReducer(userListReducer, initialUserList);
+    const userRdx = useSelector(state => state.userReducer);
 
     const callback = async (e) => {
         let body = JSON.parse(e.body);
@@ -27,7 +27,7 @@ const ChatMain = () => {
         onConnect: (e) => {
             console.log("connection success.");
             client.subscribe('/topic/message', callback);
-            client.subscribe(`/topic/message/${USER_ID}`, callback);
+            client.subscribe(`/topic/message/${userRdx?.userInfo?.id}`, callback);
         },
         onStompError: (e) => {
             console.log("connection error.");
@@ -62,6 +62,7 @@ const ChatMain = () => {
                     alert('undefined error.');
                     return;
                 }
+                alert(res?.data?.memo);
             });
     }
 
