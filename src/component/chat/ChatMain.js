@@ -62,7 +62,6 @@ const ChatMain = () => {
                     alert('undefined error.');
                     return;
                 }
-                alert(res?.data?.memo);
             });
     }
 

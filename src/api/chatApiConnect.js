@@ -11,12 +11,12 @@ const chatApiConnect = () => {
                 dateTime: new Date()
             }
             return await axios.post(`${API_SERVER_ADDRESS}/ws/v1/chat/message`, data, {
-                // withCredentials: true
+                withCredentials: true
             });
         },
         sendMessageToUser: async function (userId) {
             return await axios.post(`${API_SERVER_ADDRESS}/ws/v1/chat/message/${userId}`, '', {
-                // withCredentials: true
+                withCredentials: true
             });
         }
         
