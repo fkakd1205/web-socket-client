@@ -4,16 +4,23 @@ import * as SockJS from "sockjs-client";
 import { chatApiConnect } from "../../api/chatApiConnect";
 import { userApiConnect } from "../../api/userApiConnect";
 import { useSelector } from "react-redux";
+import ChatBody from "./ChatBody";
 
 const ChatMain = () => {
     const [userList, dispatchUserList] = useReducer(userListReducer, initialUserList);
     const userRdx = useSelector(state => state.userReducer);
+    const [sendMessage, dispatchSendMessage] = useReducer(sendMessageReducer, initalSendMessage);
+    const [chattingLog, dispatchChattingLog] = useReducer(chattingLogReducer, initalChattingLog);
 
     const callback = async (e) => {
         let body = JSON.parse(e.body);
         if (body?.statusCode === 200) {
             if (body?.socketMemo) {
                 alert(body?.socketMemo);
+                dispatchChattingLog({
+                    type: 'ADD_DATA',
+                    payload: body?.data
+                });
             }
         }
     }
@@ -55,7 +62,7 @@ const ChatMain = () => {
     }, [])
 
     const __reqCreateMessage = async () => {
-        await chatApiConnect().sendMessage()
+        await chatApiConnect().sendMessage(sendMessage)
             .catch(err => {
                 let res = err.response;
                 if (res?.status === 500) {
@@ -66,6 +73,7 @@ const ChatMain = () => {
             });
     }
 
+    // STEP 2.
     const __reqCreateMessageToUser = async (userId) => {
         await chatApiConnect().sendMessageToUser(userId)
             .then(res => {
@@ -91,7 +99,6 @@ const ChatMain = () => {
                         type: 'INIT_DATA',
                         payload: res.data.data
                     })
-                    console.log(res.data.data);
                 }
             })
             .catch(err => {
@@ -109,14 +116,34 @@ const ChatMain = () => {
         await __reqCreateMessageToUser(receiverId)
     }
 
+    // STEP 3.
+    const onChangeSendMessageValue = (e) => {
+        dispatchSendMessage({
+            type: 'CHANGE_DATA',
+            payload: {
+                name: e.target.name,
+                value: e.target.value
+            }
+        })
+    }
+
+    const onSubmitSendMessageToUser = async (e) => {
+        e.preventDefault();
+
+        await __reqCreateMessage();
+        dispatchSendMessage({
+            type: 'CLEAR'
+        })
+    }
+
     return (
         <>
-            <div>
+            {/* <div>
                 <button onClick={__reqCreateMessage}>전송</button>
-            </div>
+            </div> */}
 
             <div>
-                <div>*User List*</div>
+                {/* <div>*User List*</div>
                 {userList?.map((r, idx) => {
                     return (
                         <div key={'user-list-idx' + idx}>
@@ -124,7 +151,14 @@ const ChatMain = () => {
                         </div>
                     )
                 })
-                }
+                } */}
+                <ChatBody
+                    chattingLog={chattingLog}
+                    sendMessage={sendMessage}
+
+                    onChangeSendMessageValue={onChangeSendMessageValue}
+                    onSubmitSendMessageToUser={onSubmitSendMessageToUser}
+                ></ChatBody>
             </div>
         </>
     )
@@ -133,6 +167,8 @@ const ChatMain = () => {
 export default ChatMain;
 
 const initialUserList = null;
+const initalSendMessage = null;
+const initalChattingLog = [];
 
 const userListReducer = (state, action) => {
     switch(action.type) {
@@ -140,6 +176,33 @@ const userListReducer = (state, action) => {
             return action.payload;
         case 'CLEAR':
             return initialUserList;
+        default: return {...state};
+    }
+}
+
+const sendMessageReducer = (state, action) => {
+    switch(action.type) {
+        case 'INIT_DATA':
+            return action.payload;
+        case 'CHANGE_DATA':
+            return {
+                ...state,
+                [action.payload.name]: action.payload.value
+            }
+        case 'CLEAR':
+            return initalSendMessage;
+        default: return {...state};
+    }
+}
+
+const chattingLogReducer = (state, action) => {
+    switch(action.type) {
+        case 'INIT_DATA':
+            return action.payload;
+        case 'ADD_DATA':
+            return state.concat(action.payload)
+        case 'CLEAR':
+            return initalChattingLog;
         default: return {...state};
     }
 }
