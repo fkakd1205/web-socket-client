@@ -3,16 +3,15 @@ import styled from "styled-components";
 import * as StompJs from "@stomp/stompjs";
 import * as SockJS from "sockjs-client";
 import { chatApiConnect } from "../../api/chatApiConnect";
-import { userApiConnect } from "../../api/userApiConnect";
-import { useSelector } from "react-redux";
-import ChatBody from "./ChatBody";
+import ChatRoomBody from "./ChatRoomBody";
 
 const Container = styled.div`
+    width: 60%;
+    text-align: center;
 `;
 
-const ChatMain = (props) => {
-    const [userList, dispatchUserList] = useReducer(userListReducer, initialUserList);
-    const userRdx = useSelector(state => state.userReducer);
+const ChatRoomMain = (props) => {
+    const [chatRoom, dispatchChatRoom] = useReducer(chatRoomReducer, initialChatRoom);
     const [sendMessage, dispatchSendMessage] = useReducer(sendMessageReducer, initalSendMessage);
     const [chattingLog, dispatchChattingLog] = useReducer(chattingLogReducer, initalChattingLog);
 
@@ -35,12 +34,7 @@ const ChatMain = (props) => {
         heartbeatOutgoing: 10000,
         onConnect: (e) => {
             console.log("connection success.");
-            // 모든 유저가 전달하는 message를 받는다
-            client.subscribe('/topic/message', callback);
-
-            // 내 아이디에 깨우기 알림을 받는다.
-            // TODO :: 확인하기
-            client.subscribe(`/topic/message/${userRdx?.userInfo?.id}`, callback);
+            client.subscribe(`/topic/message/channel/${chatRoom?.id}`, callback);
         },
         onStompError: (e) => {
             console.log("connection error.");
@@ -52,23 +46,35 @@ const ChatMain = (props) => {
     });
 
     useEffect(() => {
+        if(!chatRoom){
+            return;
+        }
+
         client.activate();
 
         return () => {
             client.deactivate();
         }
-    }, [])
+    }, [chatRoom])
 
     useEffect(() => {
-        async function fetchInit() {
-            await onActionSearchUser();
+        if(!props.channelData) {
+            return;
         }
 
-        fetchInit();
-    }, [])
+        dispatchChatRoom({
+            type: 'INIT_DATA',
+            payload: props.channelData
+        })
 
-    const __reqCreateMessage = async () => {
-        await chatApiConnect().sendMessage(sendMessage)
+        dispatchChattingLog({type: 'CLEAR'});
+        dispatchSendMessage({type: 'CLEAR'});
+    }, [props.channelData])
+
+    // 현재 접속한 채팅룸에 메시지를 전송한다
+    // STEP 4.
+    const __reqCreateMessageToRoom = async () => {
+        await chatApiConnect().sendMessageToRoom(chatRoom?.id, sendMessage)
             .catch(err => {
                 let res = err.response;
                 if (res?.status === 500) {
@@ -79,50 +85,7 @@ const ChatMain = (props) => {
             });
     }
 
-    // STEP 2.
-    const __reqCreateMessageToUser = async (userId) => {
-        await chatApiConnect().sendMessageToUser(userId)
-            .then(res => {
-                if(res.status === 200) {
-                    alert('전송 완료.');
-                }
-            })
-            .catch(err => {
-                let res = err.response;
-                if (res?.status === 500) {
-                    alert('undefined error.');
-                    return;
-                }
-                alert(res?.data?.memo);
-            });
-    }
-
-    const onActionSearchUser = async () => {
-        await userApiConnect().searchList()
-            .then(res => {
-                if (res.status === 200) {
-                    dispatchUserList({
-                        type: 'INIT_DATA',
-                        payload: res.data.data
-                    })
-                }
-            })
-            .catch(err => {
-                let res = err.response;
-                if (res?.status === 500) {
-                    alert('undefined error.');
-                    return;
-                }
-                alert(res?.data?.memo);
-            });
-    }
-
-    const onActionCreateMessageToUser = async (e) => {
-        let receiverId = e.target.value;
-        await __reqCreateMessageToUser(receiverId)
-    }
-
-    // STEP 3.
+    // STEP 4.
     const onChangeSendMessageValue = (e) => {
         dispatchSendMessage({
             type: 'CHANGE_DATA',
@@ -133,40 +96,42 @@ const ChatMain = (props) => {
         })
     }
 
-    const onSubmitSendMessageToUser = async (e) => {
+    const onSubmitSendMessageToRoom = async (e) => {
         e.preventDefault();
 
-        await __reqCreateMessage();
+        await __reqCreateMessageToRoom();
         dispatchSendMessage({
             type: 'CLEAR'
         })
     }
 
     return (
+        chatRoom &&
         <Container>
-            <ChatBody
+            <ChatRoomBody
                 chattingLog={chattingLog}
                 sendMessage={sendMessage}
+                chatRoom={chatRoom}
 
                 onChangeSendMessageValue={onChangeSendMessageValue}
-                onSubmitSendMessageToUser={onSubmitSendMessageToUser}
-            ></ChatBody>
+                onSubmitSendMessageToRoom={onSubmitSendMessageToRoom}
+            ></ChatRoomBody>
         </Container>
     )
 }
 
-export default ChatMain;
+export default ChatRoomMain;
 
-const initialUserList = null;
+const initialChatRoom = null;
 const initalSendMessage = null;
 const initalChattingLog = [];
 
-const userListReducer = (state, action) => {
+const chatRoomReducer = (state, action) => {
     switch(action.type) {
         case 'INIT_DATA':
             return action.payload;
         case 'CLEAR':
-            return initialUserList;
+            return initialChatRoom;
         default: return {...state};
     }
 }

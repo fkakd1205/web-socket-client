@@ -91,7 +91,7 @@ const LoginMain = () => {
         await userApiConnect().postLogin(loginData)
             .then(res => {
                 if (res?.status === 200 && res?.data?.message === 'success') {
-                    navigate('/chat');
+                    navigate('/');
                 }
             })
             .catch(err => {

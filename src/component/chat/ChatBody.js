@@ -11,12 +11,16 @@ const ChattingBoxWrapper = styled.div`
     background-color: var(--chat-sub-color2);
     position: relative;
 
-    .send-message-form {
-        display: flex;
+    .send-box {
         width: 100%;
         position: fixed;
-        bottom: 0;
+        bottom: -10;
         position: absolute;    
+    }
+
+    .send-message-form {
+        width: 100%;
+        display: flex;
     }
 
     .input-el {
@@ -47,7 +51,7 @@ const ChattingBoxWrapper = styled.div`
 
     .message-box {
         padding: 5px;
-        height: 20vh;
+        height: 200px;
         overflow: auto;
     }
 
@@ -66,6 +70,10 @@ const ChattingBoxWrapper = styled.div`
         margin-left: 10px;
         font-size: 12px;
         color: #888888;
+    }
+
+    .send-box {
+        
     }
 `;
 

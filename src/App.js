@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setUserInfo } from './redux/action/user';
 import { useEffect } from 'react';
 import { userApiConnect } from './api/userApiConnect';
+import ChannelMain from './component/channel/ChannelMain';
 
 function App() {
   const userRdx = useSelector(state => state.userReducer);
@@ -37,13 +38,13 @@ function App() {
     <>
       {userRdx.userInfo ? (
         <Routes>
-          <Route path="*" element={<ChatMain />} />
-          <Route path="/" exact element={<ChatMain />} />
+          <Route path="*" element={<ChannelMain />} />
+          <Route path="/" exact element={<ChannelMain />} />
+          <Route path="/chat" exact element={<ChatMain />} />
         </Routes>
       ) : (
         <Routes>
           <Route path="*" exact element={<LoginMain />} />
-          <Route path="/" exact element={<LoginMain />} />
         </Routes>
       )}
     </>

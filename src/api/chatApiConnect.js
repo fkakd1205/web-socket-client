@@ -13,8 +13,12 @@ const chatApiConnect = () => {
             return await axios.post(`${API_SERVER_ADDRESS}/ws/v1/chat/message/${userId}`, '', {
                 withCredentials: true
             });
-        }
-        
+        },
+        sendMessageToRoom: async function (channelId, data) {
+            return await axios.post(`${API_SERVER_ADDRESS}/ws/v1/chat/message/channel/${channelId}`, data, {
+                withCredentials: true
+            });
+        } 
     }
 }
 
